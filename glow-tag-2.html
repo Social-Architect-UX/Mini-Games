@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Glow Tag v2</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+      font-family: sans-serif;
+      color: white;
+    }
+
+    #ui {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      font-size: 18px;
+    }
+
+    .player {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      position: absolute;
+    }
+
+    #you {
+      background: cyan;
+    }
+
+    #it {
+      background: red;
+    }
+
+    .glow {
+      box-shadow: 0 0 25px 12px currentColor;
+    }
+
+    #gameOver {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      font-size: 32px;
+    }
+
+    button {
+      margin-top: 20px;
+      font-size: 18px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="ui">
+  ⏱ Time: <span id="time">30</span><br>
+  ⭐ Score: <span id="score">0</span>
+</div>
+
+<div id="you" class="player"></div>
+<div id="it" class="player glow"></div>
+
+<div id="gameOver">
+  <div id="result"></div>
+  <button onclick="location.reload()">Restart</button>
+</div>
+
+<script>
+  const arenaWidth = window.innerWidth;
+  const arenaHeight = window.innerHeight;
+
+  const you = { el: youEl = document.getElementById("you"), x: 100, y: 100 };
+  const it = { el: itEl = document.getElementById("it"), x: 400, y: 200 };
+
+  let youAreIt = false;
+  let score = 0;
+  let timeLeft = 30;
+  let gameRunning = true;
+
+  const keys = {};
+  document.addEventListener("keydown", e => keys[e.key] = true);
+  document.addEventListener("keyup", e => keys[e.key] = false);
+
+  function clamp(player) {
+    player.x = Math.max(0, Math.min(arenaWidth - 40, player.x));
+    player.y = Math.max(0, Math.min(arenaHeight - 40, player.y));
+  }
+
+  function moveYou() {
+    const speed = youAreIt ? 6 : 4;
+    if (keys.ArrowUp) you.y -= speed;
+    if (keys.ArrowDown) you.y += speed;
+    if (keys.ArrowLeft) you.x -= speed;
+    if (keys.ArrowRight) you.x += speed;
+    clamp(you);
+  }
+
+  function moveIt() {
+    const speed = youAreIt ? 3 : 5;
+    if (it.x < you.x) it.x += speed;
+    if (it.x > you.x) it.x -= speed;
+    if (it.y < you.y) it.y += speed;
+    if (it.y > you.y) it.y -= speed;
+    clamp(it);
+  }
+
+  function checkTag() {
+    const dx = you.x - it.x;
+    const dy = you.y - it.y;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance < 40) {
+      youAreIt = !youAreIt;
+      score += 10;
+
+      you.el.classList.toggle("glow", youAreIt);
+      it.el.classList.toggle("glow", !youAreIt);
+    }
+  }
+
+  function draw() {
+    you.el.style.transform = `translate(${you.x}px, ${you.y}px)`;
+    it.el.style.transform = `translate(${it.x}px, ${it.y}px)`;
+    document.getElementById("score").textContent = score;
+  }
+
+  function gameLoop() {
+    if (!gameRunning) return;
+    moveYou();
+    moveIt();
+    checkTag();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+
+  setInterval(() => {
+    if (!gameRunning) return;
+    timeLeft--;
+    document.getElementById("time").textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      gameRunning = false;
+      document.getElementById("gameOver").style.display = "flex";
+      document.getElementById("result").textContent =
+        youAreIt ? "💥 You Lose!" : "🏆 You Survived!";
+    }
+  }, 1000);
+
+  gameLoop();
+</script>
+
+</body>
+</html>
