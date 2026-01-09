@@ -82,7 +82,7 @@
   let playerTime = 30;
   let challengerTime = 30;
   let gameRunning = true;
-  let tagCooldown = 0;
+  let tagCooldown = 3;
 
   const keys = {};
   window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
@@ -162,11 +162,11 @@
     if (youAreIt) {
       playerTime--;
       time.textContent = playerTime;
-      if (playerTime <= 0) endGame("💥 You Lose!");
+      if (playerTime <= 0) endGame("🏆 You Survived!");
     } else {
       challengerTime--;
       challengerTimeSpan.textContent = challengerTime;
-      if (challengerTime <= 0) endGame("🏆 You Survived!");
+      if (challengerTime <= 0) endGame("💥 You Lose!");
     }
   }, 1000);
 
