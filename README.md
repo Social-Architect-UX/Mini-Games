@@ -1,2 +1,2 @@
-# glow-tag
+# mini-games
 A simple browser-based tag game made with JavaScript.
