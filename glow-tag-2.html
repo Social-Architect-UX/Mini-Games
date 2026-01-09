@@ -59,7 +59,7 @@
 <body>
 
 <div id="ui">
-  ⏱ Your Time: <span id="time">30</span><br>
+  ⏱ Player Time: <span id="time">30</span><br>
   ⚡ Challenger Time: <span id="challengerTime">30</span><br>
 </div>
 
@@ -68,7 +68,7 @@
 
 <div id="gameOver">
   <div id="result"></div>
-  <button onclick="location.reload()">Restart</button>
+  <button onclick="restartGame()">Restart</button>
 </div>
 
 <script>
@@ -80,7 +80,9 @@
 
   let youAreIt = false;
   let score = 0;
-  let timeLeft = 30;
+  let playerTime = 30;
+  let challengerTime = 30;
+
   let gameRunning = true;
 
   const keys = {};
@@ -140,17 +142,56 @@
   }
 
   setInterval(() => {
-    if (!gameRunning) return;
-    timeLeft--;
-    document.getElementById("time").textContent = timeLeft;
+  let timerInterval = setInterval(timerTick, 1000);
 
-    if (timeLeft <= 0) {
-      gameRunning = false;
-      document.getElementById("gameOver").style.display = "flex";
-      document.getElementById("result").textContent =
-        youAreIt ? "💥 You Lose!" : "🏆 You Survived!";
-    }
-  }, 1000);
+function timerTick() {
+  if (!gameRunning) return;
+
+  if (youAreIt) {
+    playerTime--;
+    document.getElementById("time").textContent = playerTime;
+    if (playerTime <= 0) endGame("💥 You Lose!");
+  } else {
+    challengerTime--;
+    document.getElementById("challengerTime").textContent = challengerTime;
+    if (challengerTime <= 0) endGame("🏆 You Survived!");
+  }
+}, 1000);
+
+function endGame(message) {
+  gameRunning = false;
+  document.getElementById("gameOver").style.display = "flex";
+  document.getElementById("result").textContent = message;
+}
+
+  function restartGame() {
+  // Reset core state
+  gameRunning = true;
+  youAreIt = false;
+  score = 0;
+
+  // Reset timers
+  playerTime = 30;
+  challengerTime = 30;
+
+  // Reset UI
+  document.getElementById("time").textContent = playerTime;
+  document.getElementById("challengerTime").textContent = challengerTime;
+  document.getElementById("gameOver").style.display = "none";
+
+  // Reset positions
+  you.x = 100;
+  you.y = 100;
+  it.x = 400;
+  it.y = 200;
+
+  // Reset visuals
+  you.el.classList.remove("glow");
+  it.el.classList.add("glow");
+
+  // Restart loop
+  gameLoop();
+}
 
   gameLoop();
 </script>
