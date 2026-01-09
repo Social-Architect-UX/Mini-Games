@@ -25,8 +25,13 @@
       position: absolute;
     }
 
-    #you { background: cyan; }
-    #it { background: red; }
+    #you {
+      background: cyan;
+    }
+
+    #it {
+      background: red;
+    }
 
     .glow {
       box-shadow: 0 0 25px 12px currentColor;
@@ -54,8 +59,8 @@
 <body>
 
 <div id="ui">
-  ⏱ Time Remaining: <span id="playerTime">30</span><br>
-  ⚡ Challenger Time: <span id="challengerTime">30</span>
+  ⏱ Time: <span id="time">30</span><br>
+  ⭐ Score: <span id="score">0</span>
 </div>
 
 <div id="you" class="player"></div>
@@ -63,30 +68,28 @@
 
 <div id="gameOver">
   <div id="result"></div>
-  <button id="restart">Restart</button>
+  <button onclick="location.reload()">Restart</button>
 </div>
 
 <script>
-  const arenaW = window.innerWidth;
-  const arenaH = window.innerHeight;
+  const arenaWidth = window.innerWidth;
+  const arenaHeight = window.innerHeight;
 
-  const you = { el: document.getElementById("you"), x: 100, y: 100 };
-  const it  = { el: document.getElementById("it"),  x: 400, y: 200 };
+  const you = { el: youEl = document.getElementById("you"), x: 100, y: 100 };
+  const it = { el: itEl = document.getElementById("it"), x: 400, y: 200 };
 
-  let keys = {};
-  let youAreIt;
-  let playerTime;
-  let challengerTime;
-  let running;
-  let loopId;
-  let timerId;
+  let youAreIt = false;
+  let score = 0;
+  let timeLeft = 30;
+  let gameRunning = true;
 
+  const keys = {};
   document.addEventListener("keydown", e => keys[e.key] = true);
   document.addEventListener("keyup", e => keys[e.key] = false);
 
-  function clamp(p) {
-    p.x = Math.max(0, Math.min(arenaW - 40, p.x));
-    p.y = Math.max(0, Math.min(arenaH - 40, p.y));
+  function clamp(player) {
+    player.x = Math.max(0, Math.min(arenaWidth - 40, player.x));
+    player.y = Math.max(0, Math.min(arenaHeight - 40, player.y));
   }
 
   function moveYou() {
@@ -108,9 +111,14 @@
   }
 
   function checkTag() {
-    const d = Math.hypot(you.x - it.x, you.y - it.y);
-    if (d < 40) {
+    const dx = you.x - it.x;
+    const dy = you.y - it.y;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance < 40) {
       youAreIt = !youAreIt;
+      score += 10;
+
       you.el.classList.toggle("glow", youAreIt);
       it.el.classList.toggle("glow", !youAreIt);
     }
@@ -119,60 +127,32 @@
   function draw() {
     you.el.style.transform = `translate(${you.x}px, ${you.y}px)`;
     it.el.style.transform = `translate(${it.x}px, ${it.y}px)`;
-    playerTimeEl.textContent = playerTime;
-    challengerTimeEl.textContent = challengerTime;
+    document.getElementById("score").textContent = score;
   }
 
   function gameLoop() {
-    if (!running) return;
+    if (!gameRunning) return;
     moveYou();
     moveIt();
     checkTag();
     draw();
-    loopId = requestAnimationFrame(gameLoop);
+    requestAnimationFrame(gameLoop);
   }
 
-  function endGame(text) {
-    running = false;
-    cancelAnimationFrame(loopId);
-    clearInterval(timerId);
-    document.getElementById("result").textContent = text;
-    document.getElementById("gameOver").style.display = "flex";
-  }
+  setInterval(() => {
+    if (!gameRunning) return;
+    timeLeft--;
+    document.getElementById("time").textContent = timeLeft;
 
-  function startGame() {
-    you.x = 100; you.y = 100;
-    it.x = 400;  it.y = 200;
+    if (timeLeft <= 0) {
+      gameRunning = false;
+      document.getElementById("gameOver").style.display = "flex";
+      document.getElementById("result").textContent =
+        youAreIt ? "💥 You Lose!" : "🏆 You Survived!";
+    }
+  }, 1000);
 
-    youAreIt = false;
-    playerTime = 30;
-    challengerTime = 30;
-    running = true;
-
-    you.el.classList.remove("glow");
-    it.el.classList.add("glow");
-
-    document.getElementById("gameOver").style.display = "none";
-
-    timerId = setInterval(() => {
-      if (!running) return;
-
-      playerTime--;
-      challengerTime--;
-
-      if (challengerTime <= 0) endGame("💥 You Lose!");
-      if (playerTime <= 0) endGame("🏆 You Win!");
-    }, 1000);
-
-    gameLoop();
-  }
-
-  const playerTimeEl = document.getElementById("playerTime");
-  const challengerTimeEl = document.getElementById("challengerTime");
-
-  document.getElementById("restart").onclick = startGame;
-
-  startGame();
+  gameLoop();
 </script>
 
 </body>
